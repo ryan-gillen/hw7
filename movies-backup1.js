@@ -34,13 +34,13 @@ firebase.auth().onAuthStateChanged(async function(user) {
 
     for (let i=0; i<movies.length; i++) {
       let movie = movies[i]
+      //let docRef = await db.collection('watched').doc(`${movie.id}`).get()
+      let docRef = await db.collection('watched').where('uid', '==', `${user.uid}`).get()
 
-      //compound "where" statement:
-      let docRef = await db.collection('watched').where('uid', '==', `${user.uid}`).where('movie_id', '==', `${movie.id}`).get()
+      //db.collection('items').where('department', '==', 'produce').get()
+
       let watchedMovie = docRef.data()
-
       let opacityClass = ''
-
       if (watchedMovie) {
         opacityClass = 'opacity-20'
       }
@@ -51,7 +51,8 @@ firebase.auth().onAuthStateChanged(async function(user) {
           <a href="#" class="watched-button block text-center text-white bg-green-500 mt-4 px-4 py-2 rounded">I've watched this!</a>
         </div>
       `)
-
+    }
+  
       document.querySelector(`.movie-${movie.id}`).addEventListener('click', async function(event) {
         event.preventDefault()
 
@@ -61,7 +62,7 @@ firebase.auth().onAuthStateChanged(async function(user) {
           //if the user already had the movie on their watchlist (i.e. the opacity was already set), 
           //then remove the opacity and delete that entry from the "watched" collection:
           movieElement.classList.remove('opacity-20')
-          await db.collection('watched').where('uid', '==', `${user.uid}`).where('movie_id', '==', `${movie.id}`).delete()
+          await db.collection('watched').where('uid', '==', `${user.uid}`).where('movie_id', '==', `${movieElement}`).delete()
 
           //experimenting with compound queries (no longer needed):
             // let moviesRef = db.collection('watched')
@@ -74,18 +75,15 @@ firebase.auth().onAuthStateChanged(async function(user) {
           movieElement.classList.add('opacity-20')
           await db.collection('watched').add({
             uid: user.uid
-            movie_id: movie.id
-          }
-          
+            movie_id: m
+          })
 
         }
-        
 
 
         
         //await db.collection('watched').doc(`${movie.id}`).set({})
-      })
-    } 
+      }) 
     
 
   } else {
