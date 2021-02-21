@@ -55,6 +55,7 @@ firebase.auth().onAuthStateChanged(async function(user) {
   
       document.querySelector(`.movie-${movie.id}`).addEventListener('click', async function(event) {
         event.preventDefault()
+
         let movieElement = document.querySelector(`.movie-${movie.id}`)
 
         if(watchedMovie){
@@ -68,21 +69,14 @@ firebase.auth().onAuthStateChanged(async function(user) {
             // moviesRef.where('uid', '==', `${user.uid}`)
             // moviesRef.where('uid', '==', `${movieElement}`)
 
-
-          
-          await db.collection('watched').where('uid', '==', `${user.uid}`).get()
-
-          var citiesRef = db.collection("cities");
-
-          var query = citiesRef.where("capital", "==", true);
-
-          citiesRef.where("state", "==", "CO").where("name", "==", "Denver");
-          citiesRef.where("state", "==", "CA").where("population", "<", 1000000);
-
-
         } else {
+          //if the user does not have movie on their watchlist (i.e. the opacity has not been set yet), 
+          //then add opacity and add that entry to the "watched" collection:
           movieElement.classList.add('opacity-20')
-          await db.collection('watched').doc(`${movie.id}`).set({})
+          await db.collection('watched').add({
+            uid: user.uid
+            movie_id: movieElement
+          })
 
         }
 
@@ -107,7 +101,7 @@ firebase.auth().onAuthStateChanged(async function(user) {
       signInOptions: [
         firebase.auth.EmailAuthProvider.PROVIDER_ID
       ],
-      signInSuccessUrl: 'kelloggram.html'
+      signInSuccessUrl: 'movies.html'
     }
 
     // Starts FirebaseUI Auth
