@@ -14,14 +14,15 @@ firebase.auth().onAuthStateChanged(async function(user) {
 
     // Sign-out button
     document.querySelector('.sign-in-or-sign-out').innerHTML = `
-      <button class="text-pink-500 underline sign-out">Sign Out</button>
+      <button class="bg-clip-text text-transparent bg-gradient-to-r from-gray-50 to-gray-400 underline sign-out">Sign Out</button>
     `
+    //<button class="text-pink-500 underline sign-out">Sign Out</button>
 
     
 
     console.log(user.displayName)
     document.querySelector('.user-name').innerHTML = `
-    <span class="font-bold text-2xl bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-purple-500">${user.displayName}'s Movie Watchlist</span>              
+    <span class="font-bold text-2xl bg-clip-text text-transparent bg-gradient-to-r from-gray-50 to-gray-400">${user.displayName}'s Movie Watchlist</span>              
     `
 
 
