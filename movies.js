@@ -1,4 +1,5 @@
-//let db = firebase.firestore()
+let db = firebase.firestore()
+console.log('test')
 
 firebase.auth().onAuthStateChanged(async function(user) {
   if (user) {
@@ -24,7 +25,7 @@ firebase.auth().onAuthStateChanged(async function(user) {
     //-------------------------------------------
 
     //get everything that's Now Playing from TMDB
-    let db = firebase.firestore()
+    
     let apiKey = '8e590f3ea8624335f5cebe334fb0ef49'
     let response = await fetch(`https://api.themoviedb.org/3/movie/now_playing?api_key=${apiKey}&language=en-US`)
     let json = await response.json()
@@ -34,19 +35,74 @@ firebase.auth().onAuthStateChanged(async function(user) {
 
     for (let i=0; i<movies.length; i++) {
       let movie = movies[i]
+      //console.log(movie.id)
 
       //compound "where" statement:
-      let docRef = await db.collection('watched').where('uid', '==', `${user.uid}`).where('movie_id', '==', `${movie.id}`).get()
-      let watchedMovie = docRef.data()
+      //let docRef = await db.collection('watched').where('movie_id', '==', `${movie.id}`).where('uid', '==', `${user.uid}`).get()
+
+      // if (docRef) {
+      //   console.log('found in the collection')
+      // }
+
+
+      
+      //let watchedMovie = docRef.docs
+      let watchedMovie = null
+
+
+      //let querySnap = await db.collection('watched').get()
+      let docRef = await db.collection('watched').where('movie_id', '==', movie.id).where('uid', '==', user.uid).get()
+
+      //let docRef = await db.collection('watched').where('uid', '==', `${user.uid}`).get()
+      //let docRef = await db.collection('watched').where('movie_id', '==', `${movie.id}`).get()
+
+      let items = docRef.docs
+
+      if (items.length == 0 ) {
+        console.log('no record found for user/movie')
+        console.log(user.uid)
+        console.log(movie.id)
+
+      } else if (items.length > 1) {
+        console.log('mulitple records found')
+      } else {
+        console.log('exactly one record found')
+        let item = items[0].data()
+        watchedMovie = item.movie_id
+        console.log(watchedMovie)
+
+      }
+
+
+      // for(let i=0; i<items.length; i++) {
+      //   console.log('inside this for loop')
+      //   let collectionItem = items[i].data()
+      //   let movieIdTest = collectionItem.movie_id
+      //   let uidTest = collectionItem.uid
+
+      //   console.log(movieIdTest)
+        
+      //   console.log(uidTest)
+      // }
+
+      //let watchedMovie = null
+
+      // console.log(watchedMovie)
 
       let opacityClass = ''
 
       if (watchedMovie) {
+          //if the user already had the movie on their watched list, then display with opacity 
+          console.log(watchedMovie) 
+          console.log('is already in the watched collection 1')
         opacityClass = 'opacity-20'
+      } else {
+        // cconsole.log(movie.id) 
+        // console.log('is not in the watched collection 1')
       }
   
       document.querySelector('.movies').insertAdjacentHTML('beforeend', `
-        <div class="w-1/5 p-4 movie-${movie.id} ${opacityClass}">
+        <div class="w-1/5 p-4 movie-${movie.id} ${opacityClass}"> 
           <img src="https://image.tmdb.org/t/p/w500${movie.poster_path}" class="w-full">
           <a href="#" class="watched-button block text-center text-white bg-green-500 mt-4 px-4 py-2 rounded">I've watched this!</a>
         </div>
@@ -54,15 +110,25 @@ firebase.auth().onAuthStateChanged(async function(user) {
 
       document.querySelector(`.movie-${movie.id}`).addEventListener('click', async function(event) {
         event.preventDefault()
+        console.log ('movie clicked')
+        //console.log(movie.id)
 
         let movieElement = document.querySelector(`.movie-${movie.id}`)
 
         if(watchedMovie){
+          console.log('movie is already in the watched collection 2')
+          console.log(movie.id)
           //if the user already had the movie on their watchlist (i.e. the opacity was already set), 
           //then remove the opacity and delete that entry from the "watched" collection:
           movieElement.classList.remove('opacity-20')
-          await db.collection('watched').where('uid', '==', `${user.uid}`).where('movie_id', '==', `${movie.id}`).delete()
+          
+          let deleteRef = await db.collection('watched').where('movie_id', '==', movie.id).where('uid', '==', user.uid).get()
+          let deleteItem = deleteRef.docs
+          console.log (deleteItem[0].id)
+          console.log('is ready to be deleted')
+          await db.collection('watched').doc(deleteItem[0].id).delete()
 
+          //await db.collection('watched').doc()
           //experimenting with compound queries (no longer needed):
             // let moviesRef = db.collection('watched')
             // moviesRef.where('uid', '==', `${user.uid}`)
@@ -71,11 +137,20 @@ firebase.auth().onAuthStateChanged(async function(user) {
         } else {
           //if the user does not have movie on their watchlist (i.e. the opacity has not been set yet), 
           //then add opacity and add that entry to the "watched" collection:
+          console.log('movie not in the watched collection 2')
+          console.log(movie.id)
+
           movieElement.classList.add('opacity-20')
+          // let movieId = movie.id
+          // console.log(movieId)
+
           await db.collection('watched').add({
-            uid: user.uid
+            uid: user.uid,
             movie_id: movie.id
-          }
+            //movie_id: movie.id
+            //movie_id: `${movie.id}`
+            
+          })
           
 
         }
@@ -112,7 +187,7 @@ firebase.auth().onAuthStateChanged(async function(user) {
 
     // ****step 4: come back to the "unclick" part
 
-  })
+})
 
 //-----------------------------------------------------------------------------------------------------------------------
 
